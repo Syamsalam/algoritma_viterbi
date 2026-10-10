@@ -1,0 +1,15 @@
+{
+  "states": ["Cerah", "Berawan", "Hujan"],
+  "initial": {"Cerah": 0.5, "Berawan": 0.3, "Hujan": 0.2},
+  "transition": {
+    "Cerah": {"Cerah": 0.7, "Berawan": 0.2, "Hujan": 0.1},
+    "Berawan": {"Cerah": 0.3, "Berawan": 0.4, "Hujan": 0.3},
+    "Hujan": {"Cerah": 0.1, "Berawan": 0.3, "Hujan": 0.6}
+  },
+  "emission": {
+    "Cerah": {"jalan": 0.7, "belanja": 0.2, "di_rumah": 0.1},
+    "Berawan": {"jalan": 0.3, "belanja": 0.5, "di_rumah": 0.2},
+    "Hujan": {"jalan": 0.1, "belanja": 0.2, "di_rumah": 0.7}
+  },
+  "observations": ["jalan", "belanja", "di_rumah", "di_rumah", "belanja", "jalan"]
+}
