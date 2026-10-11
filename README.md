@@ -14,19 +14,20 @@ Ketiga berkas utama berada dalam satu folder:
 
 ```text
 algoritma_viterbi/
-|-- 02_cuaca.ipynb
-|-- contoh.json
-`-- README.md
+|-- cuaca.ipynb
+|-- dataset.json
+|-- README.md
+`-- output_eksperimen_cuaca/  (hasil eksperimen)
 ```
 
-- [02_cuaca.ipynb](02_cuaca.ipynb): program, penjelasan matematis, validasi,
+- [cuaca.ipynb](cuaca.ipynb): program, perhitungan matematis, validasi,
 	visualisasi, dan eksperimen.
-- [contoh.json](contoh.json): dataset serta parameter HMM yang dibaca program.
+- [dataset.json](dataset.json): dataset serta parameter HMM yang dibaca program.
 - [README.md](README.md): penjelasan algoritma dan panduan menjalankan program.
 
-Notebook dibagikan tanpa keluaran eksekusi lama. Tabel dan gambar akan muncul
-setelah sel dijalankan. Laporan Word/PDF, lingkungan Python, dan hasil
-pengukuran lokal tidak disertakan dalam tiga berkas ini.
+Tabel dan gambar ditampilkan saat sel notebook dijalankan. Folder
+`output_eksperimen_cuaca/` menyimpan hasil eksperimen dan dibuat otomatis jika
+belum tersedia. Lingkungan Python perlu disiapkan secara terpisah.
 
 ## Dataset
 
@@ -113,45 +114,10 @@ Skor aktif memerlukan ruang $O(N)$, sementara pendahulu untuk merekonstruksi
 lintasan memerlukan $O(TN)$. Pembanding `exhaustive_log(...)` mengevaluasi
 $N^T$ lintasan dengan biaya $O(TN^T)$ dan dibatasi maksimal sepuluh hari.
 
-## Persiapan
-
-Disarankan Python 3.11 atau lebih baru. Paket ini diuji menggunakan Python
-3.14.7. Matplotlib dipakai untuk grafik, IPython untuk tampilan HTML, dan
-JupyterLab/ipykernel untuk menjalankan notebook. Inti Viterbi tidak memakai
-pustaka HMM atau operasi NumPy.
-
-Unduh repositori sebagai ZIP dan ekstrak, atau gunakan Git:
-
-```powershell
-git clone https://github.com/Syamsalam/algoritma_viterbi.git
-cd algoritma_viterbi
-```
-
-### Windows PowerShell
-
-Jalankan perintah berikut dari folder yang berisi ketiga berkas:
-
-```powershell
-py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install jupyterlab matplotlib ipython ipykernel
-.\.venv\Scripts\python.exe -m jupyterlab
-```
-
-Aktivasi virtual environment tidak diperlukan karena perintah menggunakan
-interpreter di dalam `.venv` secara langsung. Jika perintah `py` tidak
-tersedia, gunakan `python -m venv .venv`.
-
-### Linux atau macOS
-
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install jupyterlab matplotlib ipython ipykernel
-.venv/bin/python -m jupyterlab
-```
 
 ## Menjalankan Program
 
-1. Buka [02_cuaca.ipynb](02_cuaca.ipynb) melalui JupyterLab yang baru dijalankan.
+1. Buka [cuaca.ipynb](cuaca.ipynb) melalui JupyterLab yang baru dijalankan.
 2. Pilih kernel Python dari environment tersebut.
 3. Pilih **Run > Run All Cells** dan tunggu semua sel selesai.
 4. Periksa tabel parameter, ringkasan jalur, grafik, serta pesan validasi.
@@ -160,13 +126,21 @@ python3 -m venv .venv
 
 Alternatif di VS Code: buka folder repositori, pasang ekstensi Python dan
 Jupyter dari Microsoft, buka notebook, pilih kernel `.venv`, lalu **Run All**.
-Pastikan direktori kerja kernel adalah folder yang berisi `contoh.json`.
-Notebook bukan skrip yang dijalankan dengan `python 02_cuaca.ipynb`.
+Pastikan direktori kerja kernel adalah folder yang berisi [dataset.json](dataset.json).
+Notebook dibuka melalui Jupyter atau VS Code, bukan dijalankan sebagai skrip Python.
 
-Untuk hanya mempelajari tiga contoh, jalankan sampai sel keenam. Sel ketujuh
-menjelaskan metode eksperimen, sel kedelapan mendefinisikan decoder log-space
-dan memvalidasinya dengan enumerasi, sel kesembilan menjalankan benchmark,
-dan sel kesepuluh menjalankan sensitivitas serta membuat laporan hasil.
+Notebook terdiri dari **enam sel kode**:
+
+| Sel | Fungsi |
+|---:|---|
+| 1 | Membaca dataset dan menampilkan tabel peluang awal, transisi, serta emisi |
+| 2 | Mendefinisikan Viterbi dengan rincian perhitungan dan backtracking |
+| 3 | Menjalankan contoh 1, 5, dan 10 hari serta menampilkan ringkasan dan grafik |
+| 4 | Mendefinisikan versi log-space dan enumerasi, lalu memvalidasi hasil |
+| 5 | Mengukur waktu eksekusi dan menyimpan tabel, grafik, serta metadata |
+| 6 | Menguji sensitivitas parameter dan membuat laporan eksperimen |
+
+Untuk hanya mempelajari tiga contoh, jalankan **sel 1 sampai 3**.
 Jalankan sel berurutan; **Restart Kernel and Run All** dapat digunakan untuk
 menghindari variabel lama saat parameter diubah.
 
@@ -198,11 +172,11 @@ boleh ditafsirkan sebagai perbandingan akurasi.
 	bawaan adalah 290 sampel. Grafik menunjukkan rata-rata dan SD sampel,
 	bukan interval kepercayaan.
 
-Menjalankan dua sel terakhir otomatis membuat subfolder
-`output_eksperimen_cuaca/` di folder notebook, berisi CSV mentah/ringkasan,
+Menjalankan sel 5 dan 6 otomatis membuat subfolder
+`output_eksperimen_cuaca/` di direktori kerja kernel, berisi CSV mentah/ringkasan,
 kurva teori, jalur sensitivitas, tiga gambar PNG, metadata lingkungan, dan
-laporan `hasil_eksperimen.md`. Subfolder ini adalah hasil runtime, bukan
-berkas keempat yang harus diunduh atau disiapkan terlebih dahulu.
+laporan [hasil eksperimen](output_eksperimen_cuaca/hasil_eksperimen.md).
+Subfolder ini tidak perlu disiapkan terlebih dahulu.
 
 Waktu bergantung pada komputer dan keadaan sistem, sehingga tidak harus
 sama dengan pengukuran sebelumnya. Menjalankan ulang sel eksperimen akan
@@ -211,7 +185,7 @@ Simpan hasil yang ingin dipertahankan sebelum mengulangi pengukuran.
 
 ## Pemecahan Masalah
 
-- `contoh.json tidak ditemukan`: jalankan Jupyter dari folder notebook dan
+- `dataset.json tidak ditemukan`: jalankan Jupyter dari folder notebook dan
 	pastikan JSON belum dipindahkan atau diganti namanya.
 - `ModuleNotFoundError`: ulangi pemasangan dependensi menggunakan interpreter
 	yang sama dengan kernel notebook.
@@ -221,7 +195,7 @@ Simpan hasil yang ingin dipertahankan sebelum mengulangi pengukuran.
 	tampilan pratinjau GitHub tidak menjalankan notebook.
 - `AssertionError` setelah mengubah data: periksa normalisasi matriks dan
 	konsistensi simbol; jangan menghapus validasi hanya agar eksekusi lanjut.
-- Pengukuran terasa lama: jalankan enam sel pertama untuk demonstrasi saja.
+- Pengukuran terasa lama: jalankan tiga sel pertama untuk demonstrasi saja.
 	Jangan menaikkan batas enumerasi karena jumlah lintasan tumbuh eksponensial.
 
 ## Batas Interpretasi
