@@ -1,0 +1,61 @@
+{
+  "python": "3.14.2 (main, Sep 10 2026, 12:33:04) [GCC 13.3.0]",
+  "executable": "/home/codespace/.python/current/bin/python",
+  "os": "Linux-6.8.0-1064-azure-x86_64-with-glibc2.39",
+  "processor": "x86_64",
+  "machine": "x86_64",
+  "matplotlib": "3.11.2",
+  "seed_order": 20261011,
+  "repeats": 10,
+  "warmup_calls": 2,
+  "target_batch_ms": 10,
+  "max_batch_calls": 1000,
+  "short_sizes": [
+    1,
+    2,
+    4,
+    5,
+    6,
+    8,
+    10
+  ],
+  "long_sizes": [
+    20,
+    100,
+    500,
+    1000,
+    5000
+  ],
+  "states": [
+    "Cerah",
+    "Berawan",
+    "Hujan"
+  ],
+  "observation_pattern": [
+    "jalan",
+    "belanja",
+    "di_rumah",
+    "di_rumah",
+    "belanja",
+    "jalan",
+    "belanja",
+    "di_rumah",
+    "belanja",
+    "jalan"
+  ],
+  "dataset_sha256": "2decc995973942a5b1f3e48697159929d43d3fb27a499bfd0753459fdc5063a4",
+  "timer": "perf_counter_ns",
+  "sd": "sample, ddof=1",
+  "scope": "log conversion, decoding, backtracking; excludes input, validation and presentation",
+  "sensitivity_size": 500,
+  "parameter_values": [
+    0.0,
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "alpha_definition": "(1-alpha) A + alpha I",
+  "beta_definition": "(1-beta) B + beta U",
+  "sensitivity_design": "one at a time"
+}
