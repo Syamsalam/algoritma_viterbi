@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f6">
+  <meta name="description" content="Presentasi interaktif algoritma Viterbi untuk inferensi cuaca: HMM, perhitungan, simulasi, benchmark, dan sensitivitas parameter.">
+  <title>Algoritma Viterbi | Inferensi Cuaca</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b6e60'/%3E%3Cpath d='M7 9l9 16L25 9' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/vendor/reveal/reset.css">
+  <link rel="stylesheet" href="assets/vendor/reveal/reveal.css">
+  <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="assets/presentasi.css">
+  <script defer src="assets/vendor/reveal/reveal.js"></script>
+  <script defer src="assets/vendor/katex/katex.min.js"></script>
+  <script defer src="assets/vendor/lucide/lucide.min.js"></script>
+  <script defer src="assets/vendor/plotly/plotly-basic.min.js"></script>
+  <script defer src="assets/data.js"></script>
+  <script defer src="assets/viterbi.js"></script>
+  <script defer src="assets/presentasi.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Ke materi</a>
+  <header class="deck-header">
+    <a class="brand" href="#/pengantar" aria-label="Kembali ke slide pertama"><span class="brand-symbol">V</span><span>VITERBI <span class="brand-divider">/</span> CUACA</span></a>
+    <span class="course-label">ALGORITMA &amp; PEMROGRAMAN DINAMIS</span>
+    <span class="author-label">Syamsul Alam <span class="status-dot" aria-hidden="true"></span></span>
+  </header>
+
+  <main class="reveal" id="main" tabindex="-1">
+    <div class="slides">
+      <section id="pengantar" data-title="Dari aktivitas ke cuaca" data-source="Dataset sintetis untuk pembelajaran">
+        <div class="slide-body opening-slide">
+          <div class="eyebrow"><span class="index-mark">01</span> HIDDEN MARKOV MODEL</div>
+          <h1>Algoritma<br><span>Viterbi.</span></h1>
+          <p class="opening-subtitle">Menemukan urutan cuaca paling mungkin<br>dari aktivitas yang kita amati.</p>
+          <div class="opening-example">
+            <div class="example-label"><span class="line-dot"></span> SATU URUTAN. SATU JALUR TERBAIK.</div>
+            <div id="opening-path" class="opening-path" aria-label="Contoh jalur cuaca lima hari"></div>
+            <div class="example-foot"><span>5 hari pengamatan</span><span class="mono">P* = <span id="opening-probability"></span></span></div>
+          </div>
+          <div class="opening-credit"><strong>Syamsul Alam</strong><span>D082261032 &middot; Teknik Informatika</span><span>Universitas Hasanuddin</span></div>
+          <div class="opening-watermark" aria-hidden="true">max</div>
+        </div>
+      </section>
+
+      <section id="hmm" data-title="Yang diamati, yang tersembunyi" data-source="dataset.json · 3 state dan 3 simbol observasi">
+        <div class="slide-body">
+          <div class="eyebrow"><span class="index-mark">02</span> PERSOALAN</div>
+          <h2>Aktivitas terlihat.<br>Cuacanya tersembunyi.</h2>
+          <p class="lead">HMM menghubungkan keadaan yang tidak diamati dengan bukti yang tersedia.</p>
+          <div class="hmm-diagram">
+            <div class="diagram-row hidden-row"><span class="row-label">STATE<br><small>Cuaca</small></span><div class="weather-token sunny"><i data-lucide="sun"></i><strong>Cerah</strong></div><i class="flow-arrow" data-lucide="arrow-right"></i><div class="weather-token cloudy"><i data-lucide="cloud"></i><strong>Berawan</strong></div><i class="flow-arrow" data-lucide="arrow-right"></i><div class="weather-token rainy"><i data-lucide="cloud-rain"></i><strong>Hujan</strong></div></div>
+            <div class="diagram-row emission-row"><span class="row-label">EMISI</span><i data-lucide="arrow-down"></i><span></span><i data-lucide="arrow-down"></i><span></span><i data-lucide="arrow-down"></i></div>
+            <div class="diagram-row observed-row"><span class="row-label">OBSERVASI<br><small>Aktivitas</small></span><div class="activity-token"><i data-lucide="footprints"></i><span>Jalan</span></div><span></span><div class="activity-token"><i data-lucide="shopping-bag"></i><span>Belanja</span></div><span></span><div class="activity-token"><i data-lucide="house"></i><span>Di rumah</span></div></div>
+          </div>
+          <div class="two-column note-band"><p><strong>Transisi</strong><br>Cuaca hari ini bergantung pada cuaca sebelumnya.</p><p><strong>Emisi</strong><br>Aktivitas hari ini bergantung pada cuaca hari ini.</p></div>
+          <p class="quiet-note">Hubungan ini probabilistik. Belanja tidak selalu berarti berawan. Diagram menunjukkan satu kemungkinan, bukan aturan pasti.</p>
+        </div>
+      </section>
+
+      <section id="parameter" data-title="Model di dalam program" data-source="dataset.json · parameter ditentukan manual, bukan hasil pelatihan">
+        <div class="slide-body">
+          <div class="eyebrow"><span class="index-mark">03</span> MODEL PROGRAM</div>
+          <h2>Tiga komponen peluang.</h2>
+          <p class="lead">Setiap distribusi berjumlah satu. Arah matriks menentukan makna perhitungan.</p>
+          <div class="model-layout">
+            <div class="model-block initial-block"><div class="block-heading"><span class="math-letter">&pi;</span><div><h3>Peluang awal</h3><p>Cuaca pada hari pertama</p></div></div><div id="initial-table"></div></div>
+            <div class="model-block"><div class="block-heading"><span class="math-letter">A</span><div><h3>Transisi</h3><p>Baris: asal &rarr; kolom: tujuan</p></div></div><div id="transition-table" class="table-scroll"></div></div>
+            <div class="model-block"><div class="block-heading"><span class="math-letter">B</span><div><h3>Emisi</h3><p>Baris: cuaca &rarr; kolom: aktivitas</p></div></div><div id="emission-table" class="table-scroll"></div></div>
+          </div>
+          <div class="statement"><i data-lucide="scan-eye"></i><p><strong>Data sintetis, untuk memahami algoritma.</strong><br>Enam aktivitas awal diperluas menjadi pola sepuluh hari untuk contoh dan eksperimen.</p></div>
+        </div>
+      </section>
+
+      <section id="strategi" data-title="Mengapa pemrograman dinamis?" data-source="cuaca.ipynb · viterbi, exhaustive_log">
+        <div class="slide-body">
+          <div class="eyebrow"><span class="index-mark">04</span> IDE UTAMA</div>
+          <h2>Simpan yang terbaik.<br>Tidak perlu mencoba semuanya.</h2>
+          <div class="strategy-layout">
+            <div><p class="lead">Untuk setiap hari dan cuaca tujuan, cukup pertahankan <strong>satu awalan jalur terbaik</strong> beserta pendahulunya.</p><div class="complexity-pair"><div><span class="mini-label">ENUMERASI · 10 HARI</span><strong>59.049</strong><span>jalur lengkap yang dievaluasi</span><div class="math" data-math="O(TN^T)"></div></div><div class="preferred"><span class="mini-label">VITERBI · 10 HARI</span><strong>81</strong><span>kandidat transisi dalam rekursi</span><div class="math" data-math="O(TN^2)"></div></div></div><p class="quiet-note">Untuk N = 3: 9 hari rekursi &times; 3 tujuan &times; 3 asal. Belum termasuk inisialisasi dan backtracking.</p></div>
+            <div class="code-surface"><div class="code-title"><i data-lucide="file-code-2"></i><span>cuaca.ipynb <span class="muted">/ inti rekursi</span></span></div><pre><code><span class="code-keyword">for</span> state <span class="code-keyword">in</span> states:
+    candidates = {
+        origin: scores[origin]
+        * transition[origin][state]
+        <span class="code-keyword">for</span> origin <span class="code-keyword">in</span> states
+    }
+    best = <span class="code-function">max</span>(candidates,
+               key=candidates.get)
+    next_scores[state] = (
+        candidates[best]
+        * emission[state][observation]
+    )
+    previous[state] = best</code></pre><p class="code-foot">Skor aktif O(N) &middot; Pendahulu O(TN)</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="inisialisasi" data-title="Langkah 1: inisialisasi" data-source="cuaca.ipynb · viterbi · observasi pertama: jalan">
+        <div class="slide-body">
+          <div class="eyebrow"><span class="index-mark">05</span> LANGKAH 1 / INISIALISASI</div>
+          <h2>Mulai dari hari pertama.</h2>
+          <p class="lead">Kalikan peluang awal dengan peluang aktivitas <strong>jalan</strong> pada setiap cuaca.</p>
+          <div class="equation-band"><div class="math" data-math="\delta_1(s)=\pi_s\,b_s(o_1)"></div><span>peluang awal &times; emisi</span></div>
+          <div id="initial-calculation" class="initial-calculation"></div>
+          <div class="statement"><i data-lucide="bookmark"></i><p><strong>Semua tiga skor tetap disimpan.</strong><br>Cerah unggul saat ini, tetapi keputusan jalur akhir menunggu seluruh observasi.</p></div>
+        </div>
+      </section>
+
+      <section id="rekursi" data-title="Langkah 2: rekursi" data-source="cuaca.ipynb · viterbi · hari 2: belanja">
+        <div class="slide-body">
+          <div class="eyebrow"><span class="index-mark">06</span> LANGKAH 2 / REKURSI</div>
+          <h2>Tiga kandidat. Satu pendahulu.</h2>
+          <div class="equation-band"><div class="math" data-math="\delta_t(s)=\max_r[\delta_{t-1}(r)\,a_{rs}]\,b_s(o_t)"></div></div>
+          <div class="recurrence-heading"><p>Hari 2 <span class="muted">/</span> observasi <strong>belanja</strong></p><label>Cuaca tujuan <select id="recurrence-state"><option>Cerah</option><option selected>Berawan</option><option>Hujan</option></select></label></div>
+          <div class="recurrence-layout"><div id="recurrence-table" class="table-scroll"></div><div class="recurrence-verdict"><span class="mini-label">SETELAH DIKALIKAN EMISI</span><strong id="recurrence-score"></strong><p id="recurrence-operation" class="mono"></p><div class="verdict-divider"></div><span class="mini-label">PENDAHULU TERSIMPAN</span><div id="recurrence-predecessor" class="predecessor-name"></div><p class="quiet-note">Pendahulu ini disimpan untuk backtracking.</p></div></div>
+        </div>
+      </section>
+
+      <section id="backtracking" data-title="Langkah 3–4: telusuri kembali" data-source="cuaca.ipynb · terminasi dan backtracking · contoh 5 hari">
+        <div class="slide-body">
+          <div class="eyebrow"><span class="index-mark">07</span> LANGKAH 3 &amp; 4 / JALUR AKHIR</div>
+          <h2>Keputusan terakhir.<br>Lalu telusuri ke belakang.</h2>
+          <div class="backtrack-header"><p>Mulai dari skor terbesar hari ke-5, lalu ikuti <span class="mono">backpointer</span>.</p><div class="transport" aria-label="Kontrol backtracking"><button class="icon-button" id="backtrack-reset" aria-label="Ulangi backtracking" title="Ulangi backtracking"><i data-lucide="rotate-ccw"></i></button><button class="icon-button" id="backtrack-prev" aria-label="Langkah mundur" title="Langkah mundur"><i data-lucide="skip-back"></i></button><button class="icon-button primary-icon" id="backtrack-play" aria-label="Putar backtracking" title="Putar backtracking"><i data-lucide="play"></i></button><button class="icon-button" id="backtrack-next" aria-label="Langkah berikutnya" title="Langkah berikutnya"><i data-lucide="skip-forward"></i></button></div></div>
+          <div id="backtrack-graph" class="graph-viewport" aria-label="Diagram backtracking lima hari"></div>
+          <div class="backtrack-status"><span id="backtrack-progress" aria-live="polite"></span><span class="mono">P* = <span id="backtrack-probability"></span></span></div>
+          <div id="backtrack-result" class="result-path" aria-label="Urutan jalur akhir"></div>
+          <p class="quiet-note">Jalur optimum global bukan kumpulan skor terbesar yang dipilih terpisah setiap hari.</p>
+        </div>
+      </section>
+
+      <section id="simulasi" data-title="Laboratorium Viterbi" data-source="Simulasi browser · adaptasi algoritma notebook · bukan benchmark Python">
+        <div class="slide-body demo-slide">
+          <div class="eyebrow"><span class="index-mark">08</span> STUDI KASUS INTERAKTIF</div>
+          <div class="demo-title-row"><h2>Laboratorium Viterbi.</h2><div class="segmented" role="group" aria-label="Panjang kasus"><button data-preset="1" aria-pressed="false">1 hari</button><button data-preset="5" aria-pressed="true">5 hari</button><button data-preset="10" aria-pressed="false">10 hari</button></div></div>
+          <div id="observation-inputs" class="observation-inputs" aria-label="Aktivitas per hari"></div>
+          <div class="demo-toolbar"><div class="transport" aria-label="Kontrol simulasi"><button class="icon-button" id="demo-reset" aria-label="Reset ke kasus awal" title="Reset ke kasus awal"><i data-lucide="rotate-ccw"></i></button><button class="icon-button" id="demo-prev" aria-label="Langkah perhitungan sebelumnya" title="Langkah sebelumnya"><i data-lucide="skip-back"></i></button><button class="icon-button primary-icon" id="demo-play" aria-label="Putar perhitungan" title="Putar perhitungan"><i data-lucide="play"></i></button><button class="icon-button" id="demo-next" aria-label="Langkah perhitungan berikutnya" title="Langkah berikutnya"><i data-lucide="skip-forward"></i></button><span id="demo-stage" class="stage-label" aria-live="polite"></span></div><label class="toggle-label"><input type="checkbox" id="log-toggle"><span>Skor log</span></label></div>
+          <div id="demo-error" class="error-message" role="alert" hidden></div>
+          <div class="demo-layout"><div id="demo-graph" class="graph-viewport" aria-label="Trellis simulasi Viterbi"></div><aside class="inspector" aria-label="Rincian simpul terpilih"><div class="inspector-label">SIMPUL TERPILIH</div><h3 id="inspector-title"></h3><p id="inspector-observation" class="muted"></p><div id="inspector-calculation"></div></aside></div>
+          <div class="demo-result"><div><span class="mini-label">JALUR TERBAIK</span><p id="demo-result-path"></p></div><div class="result-score"><span class="mini-label">PROBABILITAS GABUNGAN</span><strong id="demo-result-probability" class="mono"></strong></div></div>
+        </div>
+      </section>
+
+      <section id="log-space" data-title="Peluang kecil, perhitungan stabil" data-source="cuaca.ipynb · log_parameters dan viterbi_log">
+        <div class="slide-body">
+          <div class="eyebrow"><span class="index-mark">09</span> STABILITAS NUMERIK</div>
+          <h2>Kecil bukan berarti mustahil.</h2>
+          <p class="lead">Perkalian peluang berulang dapat dibulatkan menjadi nol. Di ruang log, perkalian menjadi penjumlahan.</p>
+          <div class="equation-band"><div class="math" data-math="\ell_t(s)=\max_r[\ell_{t-1}(r)+\log a_{rs}]+\log b_s(o_t)"></div></div>
+          <div class="log-controls"><label>Panjang urutan <select id="log-length"><option value="10">10 hari</option><option value="100">100 hari</option><option value="500" selected>500 hari</option><option value="5000">5.000 hari</option></select></label><span class="muted">Pola sepuluh aktivitas diulang</span></div>
+          <div class="numeric-comparison"><div><span class="mini-label">P DALAM FLOAT64 · exp(log P)</span><strong id="float-probability" class="mono"></strong><p id="underflow-status"></p></div><div class="stable-number"><span class="mini-label">LOG-PROBABILITAS</span><strong id="log-probability" class="mono"></strong><p>Skor log tetap terhingga.</p></div></div>
+          <div class="two-column note-band"><p><strong>Urutan terbaik tetap terjaga.</strong><br>Log monoton naik, sehingga pemilihan maksimum tetap bermakna.</p><p><strong>Peluang nol adalah kasus berbeda.</strong><br><span class="math" data-math="\log(0)=-\infty"></span> menandai transisi atau emisi yang mustahil.</p></div>
+          <p class="quiet-note">Skor adalah P(jalur, observasi), bukan akurasi atau posterior cuaca yang dinormalisasi.</p>
+        </div>
+      </section>
+
+      <section id="waktu" data-title="Waktu: Viterbi vs enumerasi" data-source="ringkasan_waktu.csv · 19 konfigurasi × 10 pengulangan · pengukuran Python">
+        <div class="slide-body">
+          <div class="eyebrow"><span class="index-mark">10</span> EKSPERIMEN / WAKTU</div>
+          <div class="demo-title-row"><h2>Jalur bertambah.<br>Biayanya berbeda.</h2><div class="segmented" role="group" aria-label="Rentang benchmark"><button data-timing="pendek" aria-pressed="true">1–10 hari</button><button data-timing="panjang" aria-pressed="false">20–5.000 hari</button></div></div>
+          <div class="benchmark-layout"><div class="chart-column"><div id="timing-chart" class="chart" role="img" aria-label="Grafik rata-rata waktu dan simpangan baku"></div><div class="chart-caption"><span id="timing-caption"></span><details class="data-details"><summary>Tabel data</summary><div id="timing-table" class="table-scroll"></div></details></div></div><aside class="benchmark-aside"><span class="mini-label">PADA 10 HARI</span><strong id="speed-ratio"></strong><p>rasio waktu<br>enumerasi / Viterbi</p><div class="benchmark-stat"><span><span class="legend-dot viterbi-dot"></span>Viterbi</span><strong id="viterbi-time" class="mono"></strong></div><div class="benchmark-stat"><span><span class="legend-dot enumeration-dot"></span>Enumerasi</span><strong id="enumeration-time" class="mono"></strong></div><p class="quiet-note">Rasio ini khusus pengukuran lokal, bukan jaminan kecepatan umum.</p></aside></div>
+          <p class="method-note">2 warm-up &middot; 10 run &middot; <span class="mono">perf_counter_ns</span> &middot; error bar &plusmn;1 SD sampel, bukan interval kepercayaan. Mencakup konversi log, decoding, dan backtracking.</p>
+        </div>
+      </section>
+
+      <section id="sensitivitas" data-title="Seberapa sensitif jalurnya?" data-source="ringkasan_sensitivitas.csv + jalur_sensitivitas.csv · T = 500 · satu parameter pada satu waktu">
+        <div class="slide-body sensitivity-slide">
+          <div class="eyebrow"><span class="index-mark">11</span> EKSPERIMEN / SENSITIVITAS</div>
+          <div class="demo-title-row"><h2>Model berubah.<br>Jalur ikut berubah.</h2><div class="segmented" role="group" aria-label="Parameter sensitivitas"><button data-parameter="alpha" aria-pressed="true">Alpha · transisi</button><button data-parameter="beta" aria-pressed="false">Beta · emisi</button></div></div>
+          <div class="sensitivity-controls"><div><div id="sensitivity-formula" class="math"></div><p id="sensitivity-description"></p></div><div class="slider-control"><label for="parameter-value"><span id="parameter-name">Alpha</span><output id="parameter-output" for="parameter-value">0,00</output></label><input id="parameter-value" type="range" min="0" max="1" step="0.25" value="0"><div class="slider-ticks" aria-hidden="true"><span>0</span><span>0,25</span><span>0,50</span><span>0,75</span><span>1</span></div><p id="fixed-parameter" class="quiet-note"></p></div></div>
+          <div class="sensitivity-metrics"><div><span class="mini-label">LABEL BERUBAH</span><strong id="changed-labels"></strong><span>terhadap baseline</span></div><div><span class="mini-label">PERPINDAHAN CUACA</span><strong id="state-switches"></strong><span>antarhari yang berurutan</span></div><div><span class="mini-label">LOG P / HARI</span><strong id="score-per-day" class="mono"></strong><span>bukan ukuran akurasi</span></div></div>
+          <div class="path-comparison"><div class="path-strip-heading"><strong>500 hari, dua jalur</strong><div class="state-legend"><span><b class="legend-dot sunny-dot"></b>Cerah</span><span><b class="legend-dot cloudy-dot"></b>Berawan</span><span><b class="legend-dot rainy-dot"></b>Hujan</span></div></div><div class="strip-row"><span>Baseline</span><canvas id="baseline-strip" aria-label="Jalur baseline 500 hari"></canvas></div><div class="strip-row"><span id="selected-strip-label">Alpha 0</span><canvas id="selected-strip" aria-label="Jalur konfigurasi terpilih 500 hari"></canvas></div><label class="day-inspector" for="inspect-day">Hari <input id="inspect-day" type="number" min="1" max="500" value="1"><span id="path-day-detail" aria-live="polite"></span></label></div>
+          <p class="quiet-note">Hasil tersimpan dari notebook. Persentase perubahan membandingkan dua model, bukan membandingkan prediksi dengan cuaca sebenarnya.</p>
+        </div>
+      </section>
+
+      <section id="kesimpulan" data-title="Satu jalur, tiga pelajaran" data-source="cuaca.ipynb · dataset.json · output_eksperimen_cuaca/">
+        <div class="slide-body conclusion-slide">
+          <div class="eyebrow"><span class="index-mark">12</span> KESIMPULAN</div>
+          <h2>Satu jalur.<br>Tiga pelajaran.</h2>
+          <div class="takeaways"><div><span>01</span><h3>Optimal secara global.</h3><p>Viterbi memilih urutan paling mungkin untuk seluruh observasi, bukan cuaca tiap hari secara terpisah.</p></div><div><span>02</span><h3>Efisien secara komputasi.</h3><p>Skor terbaik dan pendahulu menggantikan enumerasi seluruh jalur. Log-space menjaga stabilitas numerik.</p></div><div><span>03</span><h3>Bergantung pada model.</h3><p>Perubahan transisi atau emisi mengubah hasil. Tidak ada label cuaca nyata untuk menilai akurasi.</p></div></div>
+          <div class="closing-bottom"><div><h3>Ruang lingkup</h3><p>Satu pola sintetis, tiga state, satu lingkungan pengukuran. Interaksi alpha dan beta tidak diuji.</p><p class="muted">Syamsul Alam &middot; Universitas Hasanuddin</p></div><details class="sources-details"><summary>Sumber &amp; artefak penelitian</summary><div class="source-content"><p><strong>Program:</strong> cuaca.ipynb, sel 1–6<br><strong>Model:</strong> dataset.json<br><strong>Hasil:</strong> output_eksperimen_cuaca/</p><p id="environment-summary"></p><div class="artifact-images"><a href="assets/figures/waktu_vs_ukuran.png" target="_blank" rel="noopener"><img src="assets/figures/waktu_vs_ukuran.png" alt="Grafik asli waktu eksekusi dari notebook" loading="lazy"><span>Grafik waktu</span></a><a href="assets/figures/sensitivitas_parameter.png" target="_blank" rel="noopener"><img src="assets/figures/sensitivitas_parameter.png" alt="Grafik asli sensitivitas alpha dan beta" loading="lazy"><span>Sensitivitas</span></a><a href="assets/figures/sebaran_waktu.png" target="_blank" rel="noopener"><img src="assets/figures/sebaran_waktu.png" alt="Sebaran waktu tiap pengulangan dari notebook" loading="lazy"><span>Sebaran waktu</span></a></div><p class="quiet-note">Referensi teori: L. R. Rabiner (1989), A Tutorial on Hidden Markov Models and Selected Applications in Speech Recognition, Proceedings of the IEEE 77(2), 257–286. DOI: 10.1109/5.18626.</p></div></details></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="deck-footer">
+    <div class="footer-meta"><span id="chapter-label">Dari aktivitas ke cuaca</span><span id="slide-source">Dataset sintetis untuk pembelajaran</span></div>
+    <nav class="deck-navigation" aria-label="Navigasi presentasi"><label class="sr-only" for="slide-select">Pilih slide</label><select id="slide-select"></select><button class="icon-button" id="deck-prev" aria-label="Slide sebelumnya" title="Slide sebelumnya"><i data-lucide="arrow-left"></i></button><output id="slide-counter" aria-live="polite">01 / 12</output><button class="icon-button" id="deck-next" aria-label="Slide berikutnya" title="Slide berikutnya"><i data-lucide="arrow-right"></i></button><span class="nav-divider"></span><button class="icon-button" id="fullscreen" aria-label="Layar penuh" title="Layar penuh"><i data-lucide="maximize"></i></button></nav>
+  </footer>
+  <div class="deck-progress" aria-hidden="true"><span id="deck-progress-bar"></span></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <noscript><p class="noscript-note">JavaScript diperlukan untuk navigasi dan perhitungan interaktif.</p></noscript>
+</body>
+</html>

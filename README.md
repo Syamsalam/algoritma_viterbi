@@ -10,13 +10,19 @@ Universitas Hasanuddin, Kabupaten Gowa, Indonesia.
 
 ## Isi Repositori
 
-Ketiga berkas utama berada dalam satu folder:
+Notebook dan presentasi berada dalam satu repositori:
 
 ```text
 algoritma_viterbi/
 |-- cuaca.ipynb
 |-- dataset.json
 |-- README.md
+|-- vercel.json
+|-- presentasi/
+|   |-- index.html
+|   `-- assets/  (kode, data, pustaka, font, dan gambar lokal)
+|-- scripts/siapkan_data_presentasi.py
+|-- tests/presentasi.test.cjs
 `-- output_eksperimen_cuaca/  (hasil eksperimen)
 ```
 
@@ -28,6 +34,108 @@ algoritma_viterbi/
 Tabel dan gambar ditampilkan saat sel notebook dijalankan. Folder
 `output_eksperimen_cuaca/` menyimpan hasil eksperimen dan dibuat otomatis jika
 belum tersedia. Lingkungan Python perlu disiapkan secara terpisah.
+
+## Presentasi Interaktif
+
+Buka [presentasi/index.html](presentasi/index.html) dengan browser modern.
+Presentasi berisi 12 slide untuk penjelasan sekitar 10-15 menit. Tidak perlu
+menjalankan Python, memasang Node.js, atau menyalakan server untuk melihatnya.
+
+Folder [presentasi/](presentasi/) adalah paket offline lengkap. Saat memindahkan
+atau mengunduhnya, sertakan seluruh subfolder `assets/`, bukan HTML saja.
+Font, ikon, rumus, grafik, data, serta pustaka JavaScript dimuat dari berkas
+lokal tanpa CDN, API, atau koneksi internet. Referensi ke dokumen eksternal
+tidak diperlukan agar demo dapat berjalan.
+
+Materi mencakup HMM, matriks parameter, pemrograman dinamis, perhitungan
+inisialisasi dan rekursi, backtracking, log-space, benchmark, serta sensitivitas.
+Demo menyediakan kasus 1/5/10 hari, pilihan aktivitas tiap hari, perhitungan
+maju/mundur, putar/jeda, reset, rincian simpul, dan tampilan skor log.
+Reset mengembalikan aktivitas bawaan untuk panjang kasus yang sedang dipilih.
+Mengubah aktivitas memulai ulang perhitungan. Animasi berhenti ketika berganti
+slide atau tab tidak aktif.
+
+Gunakan tombol panah atau pemilih slide di bagian bawah. Keyboard kiri/kanan
+dapat digunakan saat fokus tidak berada pada kontrol masukan. Tombol layar
+penuh tersedia jika browser mendukungnya. Pada layar kecil, isi slide dapat
+digulir; diagram panjang mempunyai area gulir horizontal tersendiri.
+
+Grafik waktu dan sensitivitas menggunakan **hasil Python yang tersimpan**,
+bukan waktu JavaScript di browser. Sensitivitas memakai 500 hari dan nilai
+0, 0.25, 0.5, 0.75, 1 untuk satu parameter pada satu waktu. Detail jalur dapat
+diperiksa melalui pemilih hari atau posisi pada pita warna. Probabilitas
+gabungan dan perubahan label tidak boleh ditafsirkan sebagai akurasi cuaca.
+
+### Publikasi di Vercel
+
+Konfigurasi [vercel.json](vercel.json) sudah menyiapkan deployment statis:
+
+1. Pastikan berkas presentasi beserta asetnya sudah tersedia dalam repositori
+	Git yang akan diimpor. Masuk ke akun Vercel, pilih **Add New > Project**,
+	lalu impor repositori tersebut.
+2. Gunakan **Root Directory** bawaan, yaitu akar repositori, bukan
+	`presentasi`. Pilih **Framework Preset: Other**.
+3. **Build Command** dan **Install Command** dikosongkan; **Output Directory**
+	adalah `presentasi`. Nilai-nilai ini juga ditetapkan oleh konfigurasi repo.
+4. Pilih **Deploy**. Setelah selesai, buka URL yang diberikan Vercel.
+
+Tidak diperlukan environment variable, backend, database, atau fungsi Python.
+Hanya isi direktori `presentasi` yang dilayani sebagai situs. Notebook,
+skrip penyiapan, dan tes tidak ikut berada di direktori publik. Navigasi
+antar-slide menggunakan hash URL sehingga tidak memerlukan aturan rewrite.
+Pembuatan paket ini tidak otomatis memublikasikannya ke suatu akun Vercel.
+
+### Memperbarui Data dan Memeriksa Hasil
+
+Setelah sengaja memperbarui eksperimen notebook, jalankan dari akar repositori:
+
+```bash
+python3 scripts/siapkan_data_presentasi.py
+python3 scripts/siapkan_data_presentasi.py --check
+node --test tests/presentasi.test.cjs
+```
+
+Python hanya diperlukan saat memperbarui snapshot, dengan pustaka standar.
+Tes numerik menggunakan test runner bawaan Node.js 18 atau lebih baru.
+Tidak ada dependensi yang perlu dipasang untuk dua perintah tersebut.
+Perubahan yang dihasilkan pada data dan gambar presentasi perlu disertakan
+dalam deployment berikutnya; Vercel tidak menjalankan ulang eksperimen.
+
+Skrip membaca JSON dan CSV secara terstruktur, memverifikasi hash dataset
+terhadap metadata eksperimen, normalisasi matriks, jumlah konfigurasi,
+kelengkapan jalur, dan kesesuaian metrik. Snapshot
+[presentasi/assets/data.js](presentasi/assets/data.js) beserta salinan gambar
+diperbarui tanpa menulis ke notebook atau keluaran eksperimen asli.
+Opsi `--check` hanya memeriksa dan gagal bila snapshot atau gambar kedaluwarsa.
+Jika hash dataset berbeda dari eksperimen, penyebabnya harus diselesaikan
+terlebih dahulu; skrip tidak mengulang benchmark secara otomatis.
+
+Tes mencakup kecocokan hasil 1/5/10 hari, kandidat perhitungan, pembanding
+enumerasi independen, probabilitas nol, urutan kosong, tie-breaking, seluruh
+jalur sensitivitas 500 hari, dan log-probabilitas hingga 5000 hari.
+Untuk pemeriksaan browser, buka paket dalam sesi baru tanpa internet,
+coba semua kontrol, periksa navigasi keyboard, dan pastikan grafik tetap
+tampil setelah berpindah slide. Uji juga layar ponsel dan tablet.
+
+### Pustaka Lokal
+
+Distribusi runtime berikut disertakan dengan versi tetap. Lisensi asli
+tersimpan bersama masing-masing pustaka dalam
+[presentasi/assets/vendor/](presentasi/assets/vendor/); lisensi font ada di
+[presentasi/assets/fonts/LICENSE](presentasi/assets/fonts/LICENSE).
+
+| Pustaka | Versi | Sumber distribusi |
+|---|---|---|
+| Reveal.js | 5.2.1 | [npm: reveal.js](https://www.npmjs.com/package/reveal.js/v/5.2.1) |
+| Plotly.js Basic | 3.1.0 | [npm: plotly.js-basic-dist-min](https://www.npmjs.com/package/plotly.js-basic-dist-min/v/3.1.0) |
+| KaTeX | 0.16.22 | [npm: katex](https://www.npmjs.com/package/katex/v/0.16.22) |
+| Lucide | 0.468.0 | [npm: lucide](https://www.npmjs.com/package/lucide/v/0.468.0) |
+| IBM Plex Sans | 5.2.5 (Fontsource) | [npm: @fontsource/ibm-plex-sans](https://www.npmjs.com/package/@fontsource/ibm-plex-sans/v/5.2.5) |
+| IBM Plex Mono | 5.2.5 (Fontsource) | [npm: @fontsource/ibm-plex-mono](https://www.npmjs.com/package/@fontsource/ibm-plex-mono/v/5.2.5) |
+
+Referensi teori pada slide: L. R. Rabiner (1989), *A Tutorial on Hidden Markov
+Models and Selected Applications in Speech Recognition*, Proceedings of the
+IEEE, 77(2), 257-286, DOI: [10.1109/5.18626](https://doi.org/10.1109/5.18626).
 
 ## Dataset
 
